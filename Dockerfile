@@ -1,16 +1,22 @@
-FROM node:11
- RUN cd /tmp \
-   && apt-get update \
-   && apt-get install -y libgeos-dev libspatialindex-dev zip unzip p7zip libfreetype6-dev libpng-dev \
-   && wget https://www.python.org/ftp/python/3.7.1/Python-3.7.1.tgz \
-   && tar xvf Python-3.7.1.tgz \
-   && cd /tmp/Python-3.7.1 \
-   && ./configure --enable-optimizations \
-   && make -j8 \
-   && make altinstall \
-   && pip3.7 install --upgrade pip \
-   && pip3.7 install awscli virtualenv --upgrade \
-   && wget https://releases.hashicorp.com/packer/1.2.2/packer_1.2.2_linux_amd64.zip -O /tmp/packer.zip \
-   && mkdir ~/.bin \
-   && unzip /tmp/packer.zip -d ~/.bin \
-   && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
+# base from alpine 3.6
+FROM docker:17.10.0-ce
+
+RUN wget "s3.amazonaws.com/aws-cli/awscli-bundle.zip" -O "awscli-bundle.zip" && \
+    unzip awscli-bundle.zip && \
+    apk add --update groff less python git openssh ca-certificates && \
+    rm /var/cache/apk/* && \
+    ./awscli-bundle/install -i /usr/local/aws -b /usr/local/bin/aws && \
+    rm awscli-bundle.zip && \
+    rm -rf awscli-bundle
+
+ARG NODE_VERSION=10.5
+
+ENV PATH /root/.yarn/bin:$PATH
+
+RUN apk add --update nodejs=${NODE_VERSION} curl && \
+  rm -rf /var/cache/apk/*
+
+# Not using APK because 3.6 doesn't have an available 1.0 version of Yarn
+ARG YARN_VERSION=1.2.1
+
+RUN curl -o- -L https://yarnpkg.com/install.sh | sh -s -- --version ${YARN_VERSION}
