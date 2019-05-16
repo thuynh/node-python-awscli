@@ -1,4 +1,4 @@
-FROM node:11.0.0-alpine
+FROM node:11
  RUN cd /tmp \
    && apt-get update \
    && apt-get install -y libgeos-dev libspatialindex-dev zip unzip p7zip libfreetype6-dev libpng-dev \
